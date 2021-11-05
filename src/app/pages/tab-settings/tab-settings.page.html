@@ -1,0 +1,64 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="secondary">
+    <ion-title>{{ 'tab-settings.title' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-list-header>
+      <ion-label>{{ 'tab-settings.information_label' | translate }}</ion-label>
+    </ion-list-header>
+
+    <ion-item lines="none" detail="true" (click)="goToAbout()">
+      <ion-icon slot="start" name="information-circle-outline"></ion-icon>
+      <ion-label>{{ 'tab-settings.about' | translate }}</ion-label>
+    </ion-item>
+    <!--
+      TODO: Enable once history is in components lib
+      <ion-item lines="none" detail="true" (click)="goToInteractionHistory()">
+        <ion-icon slot="start" color="dark" src="assets/icons/md-info.svg"></ion-icon>
+        <ion-label>Interaction History</ion-label>
+      </ion-item>
+    -->
+  </ion-list>
+  <ion-list>
+    <ion-list-header>
+      <ion-label>{{ 'tab-settings.secrets_label' | translate }}</ion-label>
+    </ion-list-header>
+    <ng-container *ngFor="let secret of secrets | async">
+      <airgap-secret-item [secret]="secret" (click)="goToEditSecret(secret)" class="ion-padding"></airgap-secret-item>
+    </ng-container>
+    <ion-row class="ion-padding ion-justify-content-end">
+      <ion-button color="secondary" (click)="goToNewSecret()" shape="round">
+        <ion-icon slot="start" name="add"></ion-icon>
+        <ion-label>{{ 'tab-settings.add-settings_label' | translate }}</ion-label>
+      </ion-button>
+    </ion-row>
+  </ion-list>
+
+  <ion-list class="ion-no-border" lines="none">
+    <ion-list-header class="ion-no-margin" lines="none">
+      <ion-label>{{ 'tab-settings.interaction-options_label' | translate }}</ion-label>
+    </ion-list-header>
+    <ion-item (click)="pasteClipboard()">
+      <ion-icon name="return-up-forward-outline" slot="start"></ion-icon>
+      {{ 'tab-settings.paste-from-clipboard_label' | translate }}
+    </ion-item>
+
+    <ion-item (click)="goToQrSettings()">
+      <ion-icon name="qr-code-outline" slot="start"></ion-icon>
+      {{ 'tab-settings.qr-advanced-settings_label' | translate }}
+    </ion-item>
+
+    <ion-item (click)="goToInteractionSettings()">
+      <ion-icon src="assets/icons/md-swap_horiz.svg" slot="start"></ion-icon>
+      {{ 'tab-settings.interaction-settings_label' | translate }}
+    </ion-item>
+
+    <ion-item (click)="goToDangerZone()">
+      <ion-icon name="warning" slot="start"></ion-icon>
+      {{ 'tab-settings.danger-zone_label' | translate }}
+    </ion-item>
+  </ion-list>
+</ion-content>

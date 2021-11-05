@@ -1,0 +1,43 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ 'interaction-selection-settings.title' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <h3 *ngIf="initialType === interactionType.DEEPLINK" [innerHTML]="'interaction-selection-settings.same-device_heading' | translate"></h3>
+  <h3
+    *ngIf="initialType === interactionType.QR_CODE"
+    [innerHTML]="'interaction-selection-settings.offline-device_heading' | translate"
+  ></h3>
+
+  <p>{{ 'interaction-selection-settings.text' | translate }}</p>
+
+  <ion-list lines="none" class="ion-padding-vertical">
+    <ion-radio-group [(ngModel)]="selectedType">
+      <ion-item detail="false" class="ion-no-padding">
+        <ion-label color="white">{{ 'interaction-selection-settings.selector.always' | translate }}</ion-label>
+        <ion-radio class="ion-no-margin" slot="end" [value]="interactionType.ALWAYS_ASK"></ion-radio>
+      </ion-item>
+      <ion-item detail="false" class="ion-no-padding">
+        <ion-label color="white">{{ 'interaction-selection-settings.selector.same-device' | translate }}</ion-label>
+        <ion-radio class="ion-no-margin" slot="end" [value]="interactionType.DEEPLINK"></ion-radio>
+      </ion-item>
+      <ion-item detail="false" class="ion-no-padding">
+        <ion-label color="white">{{ 'interaction-selection-settings.selector.offline-device' | translate }}</ion-label>
+        <ion-radio class="ion-no-margin" slot="end" [value]="interactionType.QR_CODE"></ion-radio>
+      </ion-item>
+    </ion-radio-group>
+  </ion-list>
+
+  <p>{{ 'interaction-selection-settings.description' | translate }}</p>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-button color="primary" shape="round" (click)="goToNextPage()">
+      {{ 'interaction-selection-settings.continue_label' | translate }}
+    </ion-button>
+  </ion-fab>
+</ion-content>

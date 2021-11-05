@@ -1,0 +1,80 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+
+android {
+    compileSdkVersion project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 31
+    defaultConfig {
+        applicationId "it.airgap.vault"
+        minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 21
+        targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 31
+        versionCode 1
+        versionName "0.0.0"
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+    buildTypes {
+        debug {
+            buildConfigField "boolean", "APPIUM", "false"
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField "boolean", "APPIUM", "false"
+        }
+        appium {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField "boolean", "APPIUM", "true"
+            matchingFallbacks = ['release']
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    lintOptions {
+        abortOnError false
+    }
+}
+
+repositories {
+    maven {
+        url  "https://dl.bintray.com/ionic-team/capacitor"
+    }
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.exifinterface:exifinterface:$androidxExifinterfaceVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test:core:$androidxTestCoreVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+
+    implementation "com.google.android.material:material:$androidxMaterialVersion"
+    implementation 'com.scottyab:rootbeer-lib:0.0.7'
+    implementation("androidx.biometric:biometric:1.1.0")
+
+    def saplingVersion = "0.0.6"
+    implementation "com.github.airgap-it:airgap-sapling:$saplingVersion"
+}
+
+
+apply from: 'capacitor.build.gradle'
+
+configurations.all {
+    exclude group: 'com.google.firebase', module: ''
+    exclude group: 'com.google.android.gms', module: ''
+}
