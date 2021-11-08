@@ -88,6 +88,7 @@
     "moment": "^2.27.0",
     "myetherwallet-blockies": "^0.1.1",
     "ngx-moment": "^5.0.0",
+    "provotum-wasm-lib": "0.0.5",
     "rxjs": "~6.6.7",
     "secrets.js-grempe": "^1.1.0",
     "tslib": "^1.10.0",
