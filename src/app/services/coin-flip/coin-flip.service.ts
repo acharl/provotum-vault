@@ -12,6 +12,7 @@ export class CoinFlipService {
   constructor() {}
 
   async validateInput(binaryEntropy: string): Promise<boolean> {
+    console.log('BINARY ENTROPY', binaryEntropy)
     if (typeof binaryEntropy !== 'string') {
       throw Error('Input needs to be a string')
     }
