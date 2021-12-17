@@ -33,6 +33,7 @@ export class TransactionSignedPage {
 
   constructor(public navigationService: NavigationService, private readonly translateService: TranslateService) {
     this.interactionUrl = this.navigationService.getState().interactionUrl
+    console.log('INTERACTION URL', this.interactionUrl)
     this.wallets = this.navigationService.getState().wallets
     this.signedTxs = this.navigationService.getState().signedTxs
     this.translationKey = this.navigationService.getState().translationKey

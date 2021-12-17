@@ -16,7 +16,11 @@ export class SecretRulesPage {
     this.secret = this.navigationService.getState().secret
   }
 
+  // public goToShowSecret(): void {
+  //   this.navigationService.routeWithState('secret-show', { secret: this.secret }).catch(handleErrorLocal(ErrorCategory.IONIC_NAVIGATION))
+  // }
+
   public goToShowSecret(): void {
-    this.navigationService.routeWithState('secret-show', { secret: this.secret }).catch(handleErrorLocal(ErrorCategory.IONIC_NAVIGATION))
+    this.navigationService.routeWithState('secret-add', { secret: this.secret }).catch(handleErrorLocal(ErrorCategory.IONIC_NAVIGATION))
   }
 }

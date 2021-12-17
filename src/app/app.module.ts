@@ -56,6 +56,7 @@ import { GyroscopeServiceFactory } from './services/gyroscope/gyroscope.factory'
 import { GyroscopeNativeService } from './services/gyroscope/gyroscope.native.service'
 import { IACService } from './services/iac/iac.service'
 import { InteractionService } from './services/interaction/interaction.service'
+import { ProvotumService } from './services/provotum/provotum.service'
 import { SecretsService } from './services/secrets/secrets.service'
 import { SecureStorageFactory, SecureStorageFactoryDepHolder } from './services/secure-storage/secure-storage.factory'
 import { SecureStorageService } from './services/secure-storage/secure-storage.service'
@@ -136,6 +137,7 @@ export function createTranslateLoader(http: HttpClient): AirGapTranslateLoader {
     SerializerService,
     VaultStorageService,
     UiEventService,
+    ProvotumService,
     PercentPipe,
     SecureStorageFactoryDepHolder,
     CameraFactoryDepHolder,

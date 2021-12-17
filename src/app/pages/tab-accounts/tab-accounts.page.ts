@@ -2,6 +2,7 @@ import { AirGapWallet, AirGapWalletStatus } from '@airgap/coinlib-core'
 import { Component, OnInit } from '@angular/core'
 import { Platform } from '@ionic/angular'
 import { BehaviorSubject, Observable } from 'rxjs'
+import { ProvotumService } from 'src/app/services/provotum/provotum.service'
 
 import { MnemonicSecret } from '../../models/secret'
 import { ErrorCategory, handleErrorLocal } from '../../services/error-handler/error-handler.service'
@@ -32,7 +33,8 @@ export class TabAccountsPage implements OnInit {
     private readonly platform: Platform,
     private readonly secretsService: SecretsService,
     private readonly navigationService: NavigationService,
-    private readonly modeService: ModeService
+    private readonly modeService: ModeService,
+    private readonly provotumService: ProvotumService
   ) {
     this.secrets = this.secretsService.getSecretsObservable()
     this.isAndroid = this.platform.is('android')
@@ -70,6 +72,11 @@ export class TabAccountsPage implements OnInit {
   public async syncWallets(): Promise<void> {
     const strategy: ModeStrategy = await this.modeService.strategy()
     await strategy.syncAll()
+  }
+
+  async syncProvotum() {
+    await this.provotumService.initProvotum()
+    await this.provotumService.sync()
   }
 
   public addWallet(): void {

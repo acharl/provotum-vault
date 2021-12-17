@@ -39,6 +39,7 @@ export class InteractionService {
   ) {}
 
   public async startInteraction(interactionOptions: IInteractionOptions): Promise<void> {
+    console.log('interactionOptions', interactionOptions.iacMessage)
     const interactionType = await this.storageService.get(VaultStorageKey.INTERACTION_TYPE)
 
     if (interactionOptions.communicationType) {
@@ -97,6 +98,8 @@ export class InteractionService {
         })
         .catch(handleErrorLocal(ErrorCategory.IONIC_NAVIGATION))
     } else if (interactionOptions.operationType === InteractionOperationType.MESSAGE_SIGN_REQUEST) {
+      console.log('interactionOptions II', interactionOptions.iacMessage)
+
       this.navigationService
         .routeWithState('/transaction-signed', {
           interactionUrl: interactionOptions.iacMessage,
