@@ -79,7 +79,7 @@ export class TabAccountsPage implements OnInit {
     this.busy$.next(true)
     await this.provotumService.initProvotum()
     this.provotumService
-      .keygenSync()
+      .keygen()
       .then(() => {
         this.busy$.next(false)
       })

@@ -8,14 +8,13 @@ import { Observable } from 'rxjs'
 import { MnemonicSecret } from 'src/app/models/secret'
 import { InteractionOperationType, InteractionService } from '../interaction/interaction.service'
 import { SecretsService } from '../secrets/secrets.service'
-
-// const signer: BIPSigner = new BIPSigner()
+import { Uint8PublicKeyShareSync } from './keygen'
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProvotumService {
-  public keygen: any // TODO JGD type
+  public keygenSync: Uint8PublicKeyShareSync
   public readonly currentSecret$: Observable<MnemonicSecret>
 
   constructor(private readonly secretsService: SecretsService, private readonly interactionService: InteractionService) {
@@ -34,16 +33,19 @@ export class ProvotumService {
         const byteSize = new BN(rawByteSize, 10)
         const targetValue: BN = new BN(q, 16)
         const r = this.getSecureRandomValue(targetValue, byteSize)
-        const sealer = 'bob'
-        this.keygen = await provotumAirGap.keygen(r.toString(), sealer, params, sk, pk)
+        const sealer = secret.label
+        const keyShare = await provotumAirGap.keygen(r.toString(), sealer, params, sk, pk)
+        this.keygenSync = { ...(keyShare as any), sealer }
+
+        console.log('this.keygenSync', this.keygenSync)
         resolve()
       })
     })
   }
 
-  async keygenSync(): Promise<void> {
+  async keygen(): Promise<void> {
     const messageSignResponse: MessageSignResponse = {
-      message: JSON.stringify(this.keygen),
+      message: JSON.stringify(this.keygenSync),
       publicKey: '',
       signature: ''
     }
