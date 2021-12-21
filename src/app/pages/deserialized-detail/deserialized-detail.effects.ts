@@ -14,6 +14,7 @@ import {
   ICoinProtocol,
   MainProtocolSymbols,
   MessageSignRequest,
+  MessageSignResponse,
   ProtocolSymbols,
   SignedTransaction,
   TezosCryptoClient,
@@ -27,6 +28,7 @@ import { TranslateService } from '@ngx-translate/core'
 import * as bip39 from 'bip39'
 import { concat, from, of } from 'rxjs'
 import { concatMap, first, switchMap, tap, withLatestFrom } from 'rxjs/operators'
+import { ProvotumService } from 'src/app/services/provotum/provotum.service'
 
 import { MnemonicSecret } from '../../models/secret'
 import { SignTransactionInfo } from '../../models/sign-transaction-info'
@@ -132,7 +134,8 @@ export class DeserializedDetailEffects {
     private readonly secretsService: SecretsService,
     private readonly keyPairService: KeyPairService,
     private readonly transactionService: TransactionService,
-    private readonly interactionService: InteractionService
+    private readonly interactionService: InteractionService,
+    private readonly provotumService: ProvotumService
   ) {}
 
   private async loadNavigationData(): Promise<Action> {
@@ -216,29 +219,27 @@ export class DeserializedDetailEffects {
         .filter(
           ([_, request]: [AirGapWallet, IACMessageDefinitionObjectV3]): boolean => request.type === IACMessageType.TransactionSignRequest
         )
-        .map(
-          async ([wallet, request]: [AirGapWallet, IACMessageDefinitionObjectV3]): Promise<DeserializedUnsignedTransaction> => {
-            let details: IAirGapTransaction[]
-            if (await this.checkIfSaplingTransaction(request.payload as UnsignedTransaction, request.protocol)) {
-              details = await this.transactionService.getDetailsFromIACMessages([request], {
-                overrideProtocol: await this.getSaplingProtocol(),
-                data: {
-                  knownViewingKeys: this.secretsService.getKnownViewingKeys()
-                }
-              })
-            } else {
-              details = await this.transactionService.getDetailsFromIACMessages([request])
-            }
-
-            return {
-              type: 'unsigned',
-              id: request.id,
-              details,
-              data: request.payload as UnsignedTransaction,
-              wallet
-            }
+        .map(async ([wallet, request]: [AirGapWallet, IACMessageDefinitionObjectV3]): Promise<DeserializedUnsignedTransaction> => {
+          let details: IAirGapTransaction[]
+          if (await this.checkIfSaplingTransaction(request.payload as UnsignedTransaction, request.protocol)) {
+            details = await this.transactionService.getDetailsFromIACMessages([request], {
+              overrideProtocol: await this.getSaplingProtocol(),
+              data: {
+                knownViewingKeys: this.secretsService.getKnownViewingKeys()
+              }
+            })
+          } else {
+            details = await this.transactionService.getDetailsFromIACMessages([request])
           }
-        )
+
+          return {
+            type: 'unsigned',
+            id: request.id,
+            details,
+            data: request.payload as UnsignedTransaction,
+            wallet
+          }
+        })
     )
   }
 
@@ -247,26 +248,24 @@ export class DeserializedDetailEffects {
       transactionInfo
         .map((info: SignTransactionInfo): [AirGapWallet, IACMessageDefinitionObjectV3] => [info.wallet, info.signTransactionRequest])
         .filter(([_, request]: [AirGapWallet, IACMessageDefinitionObjectV3]): boolean => request.type === IACMessageType.MessageSignRequest)
-        .map(
-          async ([wallet, request]: [AirGapWallet, IACMessageDefinitionObjectV3]): Promise<DeserializedUnsignedMessage> => {
-            const data: MessageSignRequest = request.payload as MessageSignRequest
+        .map(async ([wallet, request]: [AirGapWallet, IACMessageDefinitionObjectV3]): Promise<DeserializedUnsignedMessage> => {
+          const data: MessageSignRequest = request.payload as MessageSignRequest
 
-            let blake2bHash: string | undefined
-            if (request.protocol === MainProtocolSymbols.XTZ) {
-              const cryptoClient = new TezosCryptoClient()
-              blake2bHash = await cryptoClient.blake2bLedgerHash(data.message)
-            }
-
-            return {
-              type: 'unsigned',
-              id: request.id,
-              protocol: request.protocol,
-              data,
-              blake2bHash,
-              wallet
-            }
+          let blake2bHash: string | undefined
+          if (request.protocol === MainProtocolSymbols.XTZ) {
+            const cryptoClient = new TezosCryptoClient()
+            blake2bHash = await cryptoClient.blake2bLedgerHash(data.message)
           }
-        )
+
+          return {
+            type: 'unsigned',
+            id: request.id,
+            protocol: request.protocol,
+            data,
+            blake2bHash,
+            wallet
+          }
+        })
     )
   }
 
@@ -295,23 +294,21 @@ export class DeserializedDetailEffects {
   private async signTransactions(unsignedTransactions: DeserializedUnsignedTransaction[], bip39Passphrase: string = ''): Promise<Action> {
     try {
       const signedTransactions: DeserializedSignedTransaction[] = await Promise.all(
-        unsignedTransactions.map(
-          async (transaction: DeserializedUnsignedTransaction): Promise<DeserializedSignedTransaction> => {
-            const signed: string = await this.signTransaction(transaction.wallet, transaction.data, bip39Passphrase)
+        unsignedTransactions.map(async (transaction: DeserializedUnsignedTransaction): Promise<DeserializedSignedTransaction> => {
+          const signed: string = await this.signTransaction(transaction.wallet, transaction.data, bip39Passphrase)
 
-            return {
-              type: 'signed',
-              id: transaction.id,
-              details: transaction.details,
-              data: {
-                accountIdentifier: transaction.wallet.publicKey.substr(-6),
-                transaction: signed,
-                callbackURL: transaction.data.callbackURL
-              },
-              wallet: transaction.wallet
-            }
+          return {
+            type: 'signed',
+            id: transaction.id,
+            details: transaction.details,
+            data: {
+              accountIdentifier: transaction.wallet.publicKey.substr(-6),
+              transaction: signed,
+              callbackURL: transaction.data.callbackURL
+            },
+            wallet: transaction.wallet
           }
-        )
+        })
       )
 
       return actions.transactionsSigned({ transactions: signedTransactions })
@@ -348,24 +345,22 @@ export class DeserializedDetailEffects {
   ): Promise<Action> {
     try {
       const signedMessages: DeserializedSignedMessage[] = await Promise.all(
-        unsignedMessages.map(
-          async (message: DeserializedUnsignedMessage): Promise<DeserializedSignedMessage> => {
-            const signature: string = await this.signMessage(message.data, bip39Passphrase, message.wallet, protocolIdentifier)
+        unsignedMessages.map(async (message: DeserializedUnsignedMessage): Promise<DeserializedSignedMessage> => {
+          const signature: string = await this.generatePartialDecryptions(message.data, bip39Passphrase, message.wallet, protocolIdentifier)
 
-            return {
-              type: 'signed',
-              id: message.id,
-              protocol: message.protocol ?? protocolIdentifier,
-              data: {
-                message: message.data.message,
-                publicKey: message.data.publicKey,
-                signature,
-                callbackURL: message.data.callbackURL
-              },
-              wallet: message.wallet
-            }
+          return {
+            type: 'signed',
+            id: message.id,
+            protocol: message.protocol ?? protocolIdentifier,
+            data: {
+              message: message.data.message,
+              publicKey: message.data.publicKey,
+              signature,
+              callbackURL: message.data.callbackURL
+            },
+            wallet: message.wallet
           }
-        )
+        })
       )
 
       return actions.messagesSigned({ messages: signedMessages })
@@ -385,43 +380,13 @@ export class DeserializedDetailEffects {
     }
   }
 
-  private async signMessage(
+  private async generatePartialDecryptions(
     message: MessageSignRequest,
-    bip39Passphrase: string,
-    wallet?: AirGapWallet,
-    protocolIdentifier?: ProtocolSymbols
-  ): Promise<string> {
-    const secret: MnemonicSecret | undefined =
-      wallet !== undefined
-        ? this.secretsService.findByPublicKey(wallet.publicKey) ?? this.secretsService.getActiveSecret()
-        : this.secretsService.getActiveSecret()
-
-    if (secret === undefined) {
-      throw new Error('Secret not found')
-    }
-
-    const entropy: string = await this.secretsService.retrieveEntropyForSecret(secret)
-    const mnemonic: string = bip39.entropyToMnemonic(entropy)
-
-    if (wallet !== undefined) {
-      return this.keyPairService.signWithWallet(wallet, message, mnemonic, bip39Passphrase)
-    } else {
-      let protocol: ICoinProtocol | undefined
-      try {
-        protocol =
-          protocolIdentifier !== undefined ? await this.protocolService.getProtocol(protocolIdentifier, undefined, false) : undefined
-      } catch (error) {
-        // tslint:disable-next-line: no-console
-        console.warn(error)
-        protocol = undefined
-      }
-
-      if (protocol === undefined) {
-        throw new Error('Protocol not found')
-      }
-
-      return this.keyPairService.signWithProtocol(protocol, message, mnemonic, bip39Passphrase, false, protocol.standardDerivationPath)
-    }
+    _bip39Passphrase: string,
+    _wallet?: AirGapWallet,
+    _protocolIdentifier?: ProtocolSymbols
+  ): Promise<any> {
+    return this.provotumService.generatePartialDecryptions(JSON.parse(message.message))
   }
 
   private async navigateWithSignedTransactions(transactions: DeserializedSignedTransaction[]): Promise<void> {
@@ -455,37 +420,42 @@ export class DeserializedDetailEffects {
   }
 
   private async navigateWithSignedMessages(messages: DeserializedSignedMessage[]): Promise<void> {
-    const broadcastUrl: IACMessageDefinitionObjectV3[] = await this.generateMessageBroadcastUrl(messages)
-    this.interactionService.startInteraction({
+    const messageSignResponse: MessageSignResponse = {
+      message: JSON.stringify(messages[0].data.signature),
+      publicKey: '',
+      signature: ''
+    }
+
+    const iacObject: IACMessageDefinitionObjectV3 = {
+      id: 12345678,
+      type: IACMessageType.MessageSignResponse,
+      protocol: MainProtocolSymbols.ETH,
+      payload: messageSignResponse
+    }
+
+    return this.interactionService.startInteraction({
       operationType: InteractionOperationType.MESSAGE_SIGN_REQUEST,
-      iacMessage: broadcastUrl,
-      messageSignResponse:
-        messages[0] !== undefined
-          ? {
-              message: messages[0].data.message,
-              publicKey: messages[0].data.publicKey,
-              signature: messages[0].data.signature
-            }
-          : undefined
+      iacMessage: [iacObject],
+      messageSignResponse
     })
   }
 
-  private async generateMessageBroadcastUrl(messages: DeserializedSignedMessage[]): Promise<IACMessageDefinitionObjectV3[]> {
-    const signResponses: IACMessageDefinitionObjectV3[] = messages.map(
-      (message: DeserializedSignedMessage): IACMessageDefinitionObjectV3 => ({
-        id: message.id,
-        protocol: message.protocol,
-        type: IACMessageType.MessageSignResponse,
-        payload: {
-          message: message.data.message,
-          publicKey: message.data.publicKey,
-          signature: message.data.signature
-        }
-      })
-    )
+  // private async generateMessageBroadcastUrl(messages: DeserializedSignedMessage[]): Promise<IACMessageDefinitionObjectV3[]> {
+  //   const signResponses: IACMessageDefinitionObjectV3[] = messages.map(
+  //     (message: DeserializedSignedMessage): IACMessageDefinitionObjectV3 => ({
+  //       id: message.id,
+  //       protocol: message.protocol,
+  //       type: IACMessageType.MessageSignResponse,
+  //       payload: {
+  //         message: message.data.message,
+  //         publicKey: message.data.publicKey,
+  //         signature: message.data.signature
+  //       }
+  //     })
+  //   )
 
-    return this.generateBroadcastUrl(signResponses, messages[0]?.data.callbackURL)
-  }
+  //   return this.generateBroadcastUrl(signResponses, messages[0]?.data.callbackURL)
+  // }
 
   private async generateBroadcastUrl(
     messages: IACMessageDefinitionObjectV3[],

@@ -249,7 +249,7 @@
   "tab-scan": {
     "title": "QR Code Scanner",
     "text": "Scan a QR Code from AirGap Wallet",
-    "multi-qr_text": "This transaction consists of multiple QR codes. Keep your camera on the changing QRs and wait until all codes are scanned.",
+    "multi-qr_text": "Keep your camera on the changing QRs and wait until all codes are scanned.",
     "empty-state_heading": "In order to scan QR codes, AirGap Vault needs the <span class=\"style__strong color__primary\">camera permission</span>.",
     "grant-permission_label": "Grant permission"
   },
@@ -302,15 +302,15 @@
       "unreadable_warning": "We were not able to extract information from this transaction. This does not mean that the transaction is invalid - Please make sure that you know what you are doing, and you can verify that you know that this transaction contains the correct data."
     },
     "message": {
-      "title": "Sign Message",
-      "button_label": "Sign Message"
+      "title": "Generate Partial Decryptions",
+      "button_label": "DECRYPT"
     },
     "loader": {
       "sign-transaction": {
         "message": "Signing transaction..."
       },
       "sign-message": {
-        "message": "Signing message..."
+        "message": "Generating partial decryptions..."
       },
       "generic": {
         "message": "Loading..."
@@ -488,6 +488,23 @@
   },
 
   "message-signing-request": {
+    "public_key_share": {
+      "title": "Public Key Share",
+      "payload_label": "Message to sign. Make sure you know what you are signing.",
+      "blake2b_hash": "Ledger Blake2b hash of the message",
+      "heading": "This is your Public Key Share, scan it with <span class=\"style__strong color__primary\">AirGap Wallet</span>.",
+      "sign_button": "Sign Message"
+    },
+
+    "encryptions": {
+      "title": "Partial Decryptions",
+      "payload_label": "Encrypted votes",
+      "blake2b_hash": "Ledger Blake2b hash of the message",
+      "heading": "These are the partial decryptions, scan the QRs with <span class=\"style__strong color__primary\">AirGap Wallet</span>.",
+      "sign_button": "Sign Message"
+    },
+
+
     "title": "Signed Message",
     "payload_label": "Message to sign. Make sure you know what you are signing.",
     "blake2b_hash": "Ledger Blake2b hash of the message",

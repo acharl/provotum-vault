@@ -17,7 +17,7 @@ enum TransactionQRType {
 })
 export class TransactionSignedPage {
   public signedTxs: string[]
-  public interactionUrl: string
+  public interactionUrl: any
 
   public splits: string[]
 
@@ -34,11 +34,13 @@ export class TransactionSignedPage {
   constructor(public navigationService: NavigationService, private readonly translateService: TranslateService) {
     this.interactionUrl = this.navigationService.getState().interactionUrl
     console.log('INTERACTION URL', this.interactionUrl)
+
+    const key = this.interactionUrl[0]?.protocol === 'xtz' ? 'public_key_share' : 'encryptions'
     this.wallets = this.navigationService.getState().wallets
     this.signedTxs = this.navigationService.getState().signedTxs
     this.translationKey = this.navigationService.getState().translationKey
-    this.pageTitle = this.translateService.instant(`${this.translationKey}.title`)
-    this.heading = this.translateService.instant(`${this.translationKey}.heading`)
+    this.pageTitle = this.translateService.instant(`${this.translationKey}.${key}.title`)
+    this.heading = this.translateService.instant(`${this.translationKey}.${key}.heading`)
     this.messageSignResponse = this.navigationService.getState().messageSignResponse
   }
 

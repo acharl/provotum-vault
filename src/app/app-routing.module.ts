@@ -127,6 +127,10 @@ const routes: Routes = [
     path: 'secret-generate-coin-flip',
     loadChildren: () =>
       import('./pages/secret-generate-coin-flip/secret-generate-coin-flip.module').then((m) => m.SecretGenerateCoinFlipPageModule)
+  },
+  {
+    path: 'provotum',
+    loadChildren: () => import('./pages/provotum/provotum.module').then((m) => m.ProvotumPageModule)
   }
 ]
 

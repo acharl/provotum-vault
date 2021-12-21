@@ -20,9 +20,9 @@
     <airgap-qr *ngIf="signedTxs && qrType === 1" [level]="'L'" [qrdata]="signedTxs" [size]="300"></airgap-qr>
   </ion-row>
 
-  <ng-container *ngIf="messageSignResponse">
+  <!-- <ng-container *ngIf="messageSignResponse">
     <airgap-message-sign-response [messageSignResponse]="messageSignResponse"></airgap-message-sign-response>
-  </ng-container>
+  </ng-container> -->
 
   <ng-container *ngIf="signedTxs">
     <airgap-signed-transaction [signedTxs]="interactionUrl"></airgap-signed-transaction>

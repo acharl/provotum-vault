@@ -34,13 +34,14 @@ export class ProvotumService {
         const byteSize = new BN(rawByteSize, 10)
         const targetValue: BN = new BN(q, 16)
         const r = this.getSecureRandomValue(targetValue, byteSize)
-        this.keygen = await provotumAirGap.keygen(r.toString(), params, sk, pk)
+        const sealer = 'bob'
+        this.keygen = await provotumAirGap.keygen(r.toString(), sealer, params, sk, pk)
         resolve()
       })
     })
   }
 
-  sync() {
+  async keygenSync(): Promise<void> {
     const messageSignResponse: MessageSignResponse = {
       message: JSON.stringify(this.keygen),
       publicKey: '',
@@ -54,10 +55,50 @@ export class ProvotumService {
       payload: messageSignResponse
     }
 
-    this.interactionService.startInteraction({
+    return this.interactionService.startInteraction({
       operationType: InteractionOperationType.MESSAGE_SIGN_REQUEST,
       iacMessage: [iacObject],
       messageSignResponse
+    })
+  }
+
+  async decryptionSync(decryptions: any): Promise<void> {
+    const messageSignResponse: MessageSignResponse = {
+      message: JSON.stringify(decryptions),
+      publicKey: '',
+      signature: ''
+    }
+
+    const iacObject: IACMessageDefinitionObjectV3 = {
+      id: 12345678,
+      type: IACMessageType.MessageSignResponse,
+      protocol: MainProtocolSymbols.ETH,
+      payload: messageSignResponse
+    }
+
+    return this.interactionService.startInteraction({
+      operationType: InteractionOperationType.MESSAGE_SIGN_REQUEST,
+      iacMessage: [iacObject],
+      messageSignResponse
+    })
+  }
+
+  async generatePartialDecryptions(encryptions: any): Promise<any> {
+    return new Promise((resolve) => {
+      this.currentSecret$.subscribe(async (secret) => {
+        const entropy: string = await this.secretsService.retrieveEntropyForSecret(secret)
+
+        await provotumAirGap.initLib()
+        const [q, params, sk, pk] = await provotumAirGap.setupElgamal(entropy)
+
+        const rawByteSize = Buffer.byteLength(q.toString(), 'utf8')
+        const byteSize = new BN(rawByteSize, 10)
+        const targetValue: BN = new BN(q, 16)
+        const r = this.getSecureRandomValue(targetValue, byteSize)
+        const sealer = 'bob'
+        const decryptions = await provotumAirGap.decrypt(encryptions, sealer, r.toString(), params, sk, pk)
+        resolve(decryptions)
+      })
     })
   }
 

@@ -63,82 +63,80 @@ export class IACService extends BaseIACService {
   ): Promise<boolean> {
     const transactionInfos: SignTransactionInfo[] = (
       await Promise.all(
-        signTransactionRequests.map(
-          async (signTransactionRequest): Promise<SignTransactionInfo> => {
-            const unsignedTransaction: UnsignedTransaction = signTransactionRequest.payload as UnsignedTransaction
+        signTransactionRequests.map(async (signTransactionRequest): Promise<SignTransactionInfo> => {
+          const unsignedTransaction: UnsignedTransaction = signTransactionRequest.payload as UnsignedTransaction
 
-            let correctWallet = this.secretsService.findWalletByPublicKeyAndProtocolIdentifier(
-              unsignedTransaction.publicKey,
-              signTransactionRequest.protocol
-            )
+          let correctWallet = this.secretsService.findWalletByPublicKeyAndProtocolIdentifier(
+            unsignedTransaction.publicKey,
+            signTransactionRequest.protocol
+          )
 
-            if (!correctWallet && signTransactionRequest.protocol === MainProtocolSymbols.BTC_SEGWIT) {
-              const decodedPSBT = bitcoinJS.Psbt.fromHex(unsignedTransaction.transaction)
-              for (const input of decodedPSBT.data.inputs) {
-                for (const derivation of input.bip32Derivation) {
-                  const masterFingerprint = derivation.masterFingerprint.toString('hex')
+          if (!correctWallet && signTransactionRequest.protocol === MainProtocolSymbols.BTC_SEGWIT) {
+            const decodedPSBT = bitcoinJS.Psbt.fromHex(unsignedTransaction.transaction)
+            for (const input of decodedPSBT.data.inputs) {
+              for (const derivation of input.bip32Derivation) {
+                const masterFingerprint = derivation.masterFingerprint.toString('hex')
 
-                  correctWallet = this.secretsService.findWalletByFingerprintDerivationPathAndProtocolIdentifier(
-                    masterFingerprint,
-                    signTransactionRequest.protocol,
-                    derivation.path,
-                    derivation.pubkey
-                  )
-                  if (correctWallet) {
-                    break
-                  }
-                }
+                correctWallet = this.secretsService.findWalletByFingerprintDerivationPathAndProtocolIdentifier(
+                  masterFingerprint,
+                  signTransactionRequest.protocol,
+                  derivation.path,
+                  derivation.pubkey
+                )
                 if (correctWallet) {
                   break
                 }
               }
-
-              if (correctWallet && !unsignedTransaction.publicKey) {
-                unsignedTransaction.publicKey = correctWallet.publicKey // PSBT txs don't include a public key, so we need to set it
+              if (correctWallet) {
+                break
               }
             }
 
-            if (correctWallet) {
-              await this.activateWallet(correctWallet)
+            if (correctWallet && !unsignedTransaction.publicKey) {
+              unsignedTransaction.publicKey = correctWallet.publicKey // PSBT txs don't include a public key, so we need to set it
             }
+          }
 
-            // If we can't find a wallet for a protocol, we will try to find the "base" wallet and then create a new
-            // wallet with the right protocol. This way we can sign all ERC20 transactions, but show the right amount
-            // and fee for all tokens we support.
-            if (!correctWallet) {
-              const baseWallet: AirGapWallet | undefined = this.secretsService.findBaseWalletByPublicKeyAndProtocolIdentifier(
-                unsignedTransaction.publicKey,
-                signTransactionRequest.protocol
-              )
+          if (correctWallet) {
+            await this.activateWallet(correctWallet)
+          }
 
-              if (baseWallet) {
-                await this.activateWallet(baseWallet)
-                // If the protocol is not supported, use the base protocol for signing
-                const protocol = await this.protocolService.getProtocol(signTransactionRequest.protocol)
-                try {
-                  correctWallet = new AirGapWallet(
-                    protocol,
-                    baseWallet.publicKey,
-                    baseWallet.isExtendedPublicKey,
-                    baseWallet.derivationPath,
-                    baseWallet.masterFingerprint,
-                    baseWallet.status
-                  )
-                  correctWallet.addresses = baseWallet.addresses
-                } catch (e) {
-                  if (e.message === 'PROTOCOL_NOT_SUPPORTED') {
-                    correctWallet = baseWallet
-                  }
+          // If we can't find a wallet for a protocol, we will try to find the "base" wallet and then create a new
+          // wallet with the right protocol. This way we can sign all ERC20 transactions, but show the right amount
+          // and fee for all tokens we support.
+          if (!correctWallet) {
+            const baseWallet: AirGapWallet | undefined = this.secretsService.findBaseWalletByPublicKeyAndProtocolIdentifier(
+              unsignedTransaction.publicKey,
+              signTransactionRequest.protocol
+            )
+
+            if (baseWallet) {
+              await this.activateWallet(baseWallet)
+              // If the protocol is not supported, use the base protocol for signing
+              const protocol = await this.protocolService.getProtocol(signTransactionRequest.protocol)
+              try {
+                correctWallet = new AirGapWallet(
+                  protocol,
+                  baseWallet.publicKey,
+                  baseWallet.isExtendedPublicKey,
+                  baseWallet.derivationPath,
+                  baseWallet.masterFingerprint,
+                  baseWallet.status
+                )
+                correctWallet.addresses = baseWallet.addresses
+              } catch (e) {
+                if (e.message === 'PROTOCOL_NOT_SUPPORTED') {
+                  correctWallet = baseWallet
                 }
               }
             }
-
-            return {
-              wallet: correctWallet,
-              signTransactionRequest
-            }
           }
-        )
+
+          return {
+            wallet: correctWallet,
+            signTransactionRequest
+          }
+        })
       )
     ).filter((signTransactionDetails) => signTransactionDetails.wallet !== undefined)
 
@@ -179,62 +177,61 @@ export class IACService extends BaseIACService {
     _scanAgainCallback: Function
   ): Promise<boolean> {
     const transactionInfos: SignTransactionInfo[] = await Promise.all(
-      messageDefinitionObjects.map(
-        async (messageDefinitionObject): Promise<SignTransactionInfo> => {
-          const messageSignRequest: MessageSignRequest = messageDefinitionObject.payload as MessageSignRequest
+      messageDefinitionObjects.map(async (messageDefinitionObject): Promise<SignTransactionInfo> => {
+        const messageSignRequest: MessageSignRequest = messageDefinitionObject.payload as MessageSignRequest
+        console.log('HARIBOL', messageSignRequest)
 
-          let correctWallet = this.secretsService.findWalletByPublicKeyAndProtocolIdentifier(
+        let correctWallet = this.secretsService.findWalletByPublicKeyAndProtocolIdentifier(
+          messageSignRequest.publicKey,
+          messageDefinitionObject.protocol
+        )
+
+        if (correctWallet) {
+          await this.activateWallet(correctWallet)
+        }
+
+        // If we can't find a wallet for a protocol, we will try to find the "base" wallet and then create a new
+        // wallet with the right protocol. This way we can sign all ERC20 transactions, but show the right amount
+        // and fee for all tokens we support.
+        if (!correctWallet) {
+          const baseWallet: AirGapWallet | undefined = this.secretsService.findBaseWalletByPublicKeyAndProtocolIdentifier(
             messageSignRequest.publicKey,
             messageDefinitionObject.protocol
           )
 
-          if (correctWallet) {
-            await this.activateWallet(correctWallet)
-          }
-
-          // If we can't find a wallet for a protocol, we will try to find the "base" wallet and then create a new
-          // wallet with the right protocol. This way we can sign all ERC20 transactions, but show the right amount
-          // and fee for all tokens we support.
-          if (!correctWallet) {
-            const baseWallet: AirGapWallet | undefined = this.secretsService.findBaseWalletByPublicKeyAndProtocolIdentifier(
-              messageSignRequest.publicKey,
-              messageDefinitionObject.protocol
-            )
-
-            if (baseWallet) {
-              await this.activateWallet(baseWallet)
-              // If the protocol is not supported, use the base protocol for signing
-              const protocol = await this.protocolService.getProtocol(messageDefinitionObject.protocol)
-              try {
-                correctWallet = new AirGapWallet(
-                  protocol,
-                  baseWallet.publicKey,
-                  baseWallet.isExtendedPublicKey,
-                  baseWallet.derivationPath,
-                  baseWallet.masterFingerprint,
-                  baseWallet.status
-                )
-                correctWallet.addresses = baseWallet.addresses
-              } catch (e) {
-                if (e.message === 'PROTOCOL_NOT_SUPPORTED') {
-                  correctWallet = baseWallet
-                }
-              }
-            }
-          }
-
-          return {
-            wallet: correctWallet,
-            signTransactionRequest: {
-              ...messageDefinitionObject,
-              payload: {
-                ...messageSignRequest,
-                publicKey: correctWallet?.publicKey ?? '' // ignore public key if no account has been found
+          if (baseWallet) {
+            await this.activateWallet(baseWallet)
+            // If the protocol is not supported, use the base protocol for signing
+            const protocol = await this.protocolService.getProtocol(messageDefinitionObject.protocol)
+            try {
+              correctWallet = new AirGapWallet(
+                protocol,
+                baseWallet.publicKey,
+                baseWallet.isExtendedPublicKey,
+                baseWallet.derivationPath,
+                baseWallet.masterFingerprint,
+                baseWallet.status
+              )
+              correctWallet.addresses = baseWallet.addresses
+            } catch (e) {
+              if (e.message === 'PROTOCOL_NOT_SUPPORTED') {
+                correctWallet = baseWallet
               }
             }
           }
         }
-      )
+
+        return {
+          wallet: correctWallet,
+          signTransactionRequest: {
+            ...messageDefinitionObject,
+            payload: {
+              ...messageSignRequest,
+              publicKey: correctWallet?.publicKey ?? '' // ignore public key if no account has been found
+            }
+          }
+        }
+      })
     )
 
     this.navigationService

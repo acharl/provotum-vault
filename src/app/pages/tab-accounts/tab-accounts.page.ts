@@ -20,6 +20,7 @@ import { SecretEditAction } from '../secret-edit/secret-edit.page'
 export class TabAccountsPage implements OnInit {
   public readonly secrets: Observable<MnemonicSecret[]>
   public activeSecret: MnemonicSecret
+  public busy$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false)
 
   public symbolFilter: string | undefined
 
@@ -75,8 +76,14 @@ export class TabAccountsPage implements OnInit {
   }
 
   async syncProvotum() {
+    this.busy$.next(true)
     await this.provotumService.initProvotum()
-    await this.provotumService.sync()
+    this.provotumService
+      .keygenSync()
+      .then(() => {
+        this.busy$.next(false)
+      })
+      .catch(() => this.busy$.next(false))
   }
 
   public addWallet(): void {
