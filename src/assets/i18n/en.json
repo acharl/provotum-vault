@@ -290,7 +290,7 @@
     }
   },
   "tabs": {
-    "wallets": "Accounts",
+    "wallets": "KeyGen",
     "scanner": "Scanner",
     "settings": "Settings"
   },
