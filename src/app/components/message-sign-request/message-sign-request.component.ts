@@ -6,14 +6,14 @@ import { Component, Input } from '@angular/core'
 })
 export class MessageSignRequestComponent {
   public _messages: {
-    data: string
+    data: any
     blake2bHash?: string
   }[]
 
   @Input()
   set messages(messages: { data: string; blake2bHash?: string }[]) {
     this._messages = messages.map((message) => {
-      const data = this.hexToReadable(message.data)
+      const data = JSON.parse(this.hexToReadable(message.data))
       return { ...message, data }
     })
   }

@@ -5,8 +5,10 @@ import { FormsModule } from '@angular/forms'
 import { IonicModule } from '@ionic/angular'
 import { TranslateModule } from '@ngx-translate/core'
 import { QRCodeModule } from 'angularx-qrcode'
+import { DirectivesModule } from '../directives/directives.module'
 
 import { PipesModule } from '../pipes/pipes.module'
+import { CollapsableJSONComponent } from './collapsable-json/collapsable-json.component'
 
 import { CurrentSecretComponent } from './current-secret/current-secret.component'
 import { EntropyProgressComponent } from './entropy-progress/entropy-progress.component'
@@ -38,9 +40,10 @@ import { VerifyKeyComponent } from './verify-key/verify-key.component'
     MessageSignRequestComponent,
     MessageSignResponseComponent,
     GridInputComponent,
-    SecretOptionItemComponent
+    SecretOptionItemComponent,
+    CollapsableJSONComponent
   ],
-  imports: [IonicModule, PipesModule, CommonModule, FormsModule, TranslateModule, QRCodeModule, AirGapAngularCoreModule],
+  imports: [IonicModule, PipesModule, CommonModule, FormsModule, TranslateModule, QRCodeModule, AirGapAngularCoreModule, DirectivesModule],
   exports: [
     CurrentSecretComponent,
     EntropyProgressComponent,
@@ -55,7 +58,8 @@ import { VerifyKeyComponent } from './verify-key/verify-key.component'
     MessageSignRequestComponent,
     MessageSignResponseComponent,
     GridInputComponent,
-    SecretOptionItemComponent
+    SecretOptionItemComponent,
+    CollapsableJSONComponent
   ],
   entryComponents: []
 })

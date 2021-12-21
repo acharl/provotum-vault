@@ -8,6 +8,7 @@ import { Observable } from 'rxjs'
 import { MnemonicSecret } from 'src/app/models/secret'
 import { InteractionOperationType, InteractionService } from '../interaction/interaction.service'
 import { SecretsService } from '../secrets/secrets.service'
+import { SealerDecryptionPostBody } from './decryption'
 import { Uint8PublicKeyShareSync } from './keygen'
 
 @Injectable({
@@ -85,7 +86,7 @@ export class ProvotumService {
     })
   }
 
-  async generatePartialDecryptions(encryptions: any): Promise<any> {
+  async generatePartialDecryptions(encryptions: any): Promise<SealerDecryptionPostBody> {
     return new Promise((resolve) => {
       this.currentSecret$.subscribe(async (secret) => {
         const entropy: string = await this.secretsService.retrieveEntropyForSecret(secret)
@@ -98,7 +99,8 @@ export class ProvotumService {
         const targetValue: BN = new BN(q, 16)
         const r = this.getSecureRandomValue(targetValue, byteSize)
         const sealer = 'bob'
-        const decryptions = await provotumAirGap.decrypt(encryptions, sealer, r.toString(), params, sk, pk)
+        const rawDecryptions = await provotumAirGap.decrypt(encryptions, sealer, r.toString(), params, sk, pk)
+        const decryptions: SealerDecryptionPostBody = { ...(rawDecryptions as any), sealer: secret.label }
         resolve(decryptions)
       })
     })

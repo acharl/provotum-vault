@@ -1,0 +1,9 @@
+<!-- <ion-item class="ion-no-padding" lines="none">
+  <ion-label>Raw Data</ion-label>
+  <ion-toggle [(ngModel)]="displayRawData" slot="end"></ion-toggle>
+</ion-item> -->
+
+<ng-container>
+  <ion-icon name="copy-outline" color="dark" slot="end" (click)="copyToClipboard()"></ion-icon>
+  <json-formatter [json]="json"></json-formatter>
+</ng-container>

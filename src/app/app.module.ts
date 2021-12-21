@@ -41,6 +41,7 @@ import * as fromRoot from './app.reducers'
 import { CameraPreview, SaplingNative, SecurityUtils } from './capacitor-plugins/definitions'
 import { CAMERA_PREVIEW_PLUGIN, SAPLING_PLUGIN, SECURITY_UTILS_PLUGIN } from './capacitor-plugins/injection-tokens'
 import { appConfig } from './config/app-config'
+import { DirectivesModule } from './directives/directives.module'
 import { DistributionOnboardingPageModule } from './pages/distribution-onboarding/distribution-onboarding.module'
 import { IntroductionPageModule } from './pages/introduction/introduction.module'
 import { LocalAuthenticationOnboardingPageModule } from './pages/local-authentication-onboarding/local-authentication-onboarding.module'
@@ -101,7 +102,8 @@ export function createTranslateLoader(http: HttpClient): AirGapTranslateLoader {
     DistributionOnboardingPageModule,
     LocalAuthenticationOnboardingPageModule,
     AirGapAngularCoreModule,
-    AirGapAngularNgRxModule
+    AirGapAngularNgRxModule,
+    DirectivesModule
   ],
   providers: [
     { provide: APP_PLUGIN, useValue: App },
