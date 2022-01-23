@@ -179,8 +179,6 @@ export class IACService extends BaseIACService {
     const transactionInfos: SignTransactionInfo[] = await Promise.all(
       messageDefinitionObjects.map(async (messageDefinitionObject): Promise<SignTransactionInfo> => {
         const messageSignRequest: MessageSignRequest = messageDefinitionObject.payload as MessageSignRequest
-        console.log('HARIBOL', messageSignRequest)
-
         let correctWallet = this.secretsService.findWalletByPublicKeyAndProtocolIdentifier(
           messageSignRequest.publicKey,
           messageDefinitionObject.protocol

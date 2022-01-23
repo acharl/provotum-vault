@@ -26,19 +26,17 @@ export class ProvotumService {
     return new Promise((resolve) => {
       this.currentSecret$.subscribe(async (secret) => {
         const entropy: string = await this.secretsService.retrieveEntropyForSecret(secret)
-
         await provotumAirGap.initLib()
         const [q, params, sk, pk] = await provotumAirGap.setupElgamal(entropy)
-
         const rawByteSize = Buffer.byteLength(q.toString(), 'utf8')
         const byteSize = new BN(rawByteSize, 10)
         const targetValue: BN = new BN(q, 16)
         const r = this.getSecureRandomValue(targetValue, byteSize)
         const sealer = secret.label
         const keyShare = await provotumAirGap.keygen(r.toString(), sealer, params, sk, pk)
+
         this.keygenSync = { ...(keyShare as any), sealer }
 
-        console.log('this.keygenSync', this.keygenSync)
         resolve()
       })
     })
@@ -90,10 +88,8 @@ export class ProvotumService {
     return new Promise((resolve) => {
       this.currentSecret$.subscribe(async (secret) => {
         const entropy: string = await this.secretsService.retrieveEntropyForSecret(secret)
-
         await provotumAirGap.initLib()
         const [q, params, sk, pk] = await provotumAirGap.setupElgamal(entropy)
-
         const rawByteSize = Buffer.byteLength(q.toString(), 'utf8')
         const byteSize = new BN(rawByteSize, 10)
         const targetValue: BN = new BN(q, 16)
